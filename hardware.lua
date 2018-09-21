@@ -1,10 +1,10 @@
 local Hardware = {}
 
-function Hardware.configGPIO(led_log)
+function Hardware.configGPIO()
     -- DEFININDO MODO DE OPERACAO
     gpio.mode(1, gpio.OUTPUT); --input
     gpio.mode(2, gpio.OUTPUT); --input
-    gpio.mode(led_log, gpio.OUTPUT);
+    gpio.mode(4, gpio.OUTPUT); -- led_log
     gpio.mode(5, gpio.OUTPUT);
     gpio.mode(6, gpio.OUTPUT);
     gpio.mode(7, gpio.OUTPUT);
@@ -13,7 +13,7 @@ function Hardware.configGPIO(led_log)
     -- DESLIGANDO AS GPIOs
     gpio.write(1, gpio.LOW);
     gpio.write(2, gpio.LOW);
-    gpio.write(led_log, gpio.HIGH); -- default 1 eh off
+    gpio.write(4, gpio.HIGH); -- default 1 eh off
     gpio.write(5, gpio.LOW);
     gpio.write(6, gpio.LOW);
     gpio.write(7, gpio.LOW);
@@ -27,9 +27,9 @@ function Hardware.BlinkLed(id, tempo)
     end)
 end
 
-function Hardware.BlinkLedStop(id, led_log)
+function Hardware.BlinkLedStop(id)
     tmr.stop(id);
-    gpio.write(led_log, gpio.HIGH);
+    gpio.write(4, gpio.HIGH);
 end
 
 function Hardware.statusPinos() -- atualiza o status atual do pino 
@@ -80,12 +80,12 @@ function Hardware.get_tensao() -- formata o valor da tensao
     return string.format("%1.03f", adc.readvdd33(0)/1000);  
 end
 
-function Hardware.configWiFi(ssid, pwd)
+function Hardware.configWiFi(ssid, pssid)
     wifi.setmode(wifi.STATION);
     wifi.setphymode(wifi.PHYMODE_G);
     station_cfg={}
     station_cfg.ssid=ssid;
-    station_cfg.pwd=pwd;
+    station_cfg.pwd=pssid;
     station_cfg.save=false;
     station_cfg.auto=true;
     wifi.sta.config(station_cfg);
@@ -114,6 +114,15 @@ function Hardware.updatePino(pino_, statusPino_)
     end
     
     return buf_;
+end
+
+function Hardware.memoriaAloc()
+    collectgarbage()
+    local total_allocated, estimated_used = node.egc.meminfo()
+    return string.format("%1.01f", (total_allocated/32000)*100).."%";
+
+    --print(node.egc.meminfo().." node")
+    --print((collectgarbage("count")*1024).." lua")
 end
 
 return Hardware
