@@ -1,19 +1,20 @@
 local Hardware = require "hardware";
 local Web = require "web";
-local led_log = 4;
 
 local ipAddr = wifi.sta.getip();
 local macTextPlan = Hardware.getMAC_textPlan();
 
 local espId = macTextPlan;
-local server = "192.168.0.133";
-local portaMQTT = 1883;
-local portaHTTP = 8080
+
+local led_log = 4;
+local serverName = "192.168.0.133";
+local portaServerMQTT = 1883;
+local portaServerHTTP = 8080;
+local portaLocalHTTP = 80;
 local tls = 0;
 local qos = 1;
 local retain = 1;
-local keepAlive = 300;
-local portaHTML = 80;
+local keepAlive = 60;
 
 local mqttP1 = espId.."/p01";
 local mqttP2 = espId.."/p02";
@@ -69,7 +70,7 @@ function Receiver(client, request)
             elseif ((_GET.func == "3") and (_GET.rst == macTextPlan))  then
                 response[1] = Web.reset(ipAddr, macTextPlan);
             elseif ((_GET.func == "4") and (_GET.up == macTextPlan))  then
-                Web.update_arquivo(server, portaHTTP, "principal.lua");
+                Web.update_arquivo(serverName, portaServerHTTP, "principal.lua");
                 response[1] = Web.reset(ipAddr, macTextPlan);
             end
         else
@@ -82,7 +83,7 @@ function Receiver(client, request)
     gpio.write(led_log, gpio.HIGH);
 end
 
-srv:listen(portaHTML, function(conn) conn:on("receive", Receiver) end)
+srv:listen(portaLocalHTTP, function(conn) conn:on("receive", Receiver) end)
 
 -- ***************************************************************************************************************
 
@@ -115,10 +116,10 @@ function StartMqtt(m)
 
     local function Conectar(logFlag)
         m:close();
-        m:connect(server, portaMQTT, tls, 
+        m:connect(serverName, portaServerMQTT, tls, 
             function(client)
-                print("MQTT - conectado "..server..":"..portaMQTT.."\n")
-                tmr.stop(1)
+                print("MQTT - conectado "..serverName..":"..portaServerMQTT.."\n")
+                Hardware.BlinkLedStop(1);
 
                 m:subscribe(
                 {
@@ -132,7 +133,7 @@ function StartMqtt(m)
             end,            
             function(client, motivo)
                 if (logFlag) then
-                    print(Web.ErrosMQTT(motivo, server))
+                    print(Web.ErrosMQTT(motivo, serverName))
                     logflag = false
                     Hardware.BlinkLed(1, 250)
                 end
@@ -146,3 +147,5 @@ function StartMqtt(m)
 end
 
 StartMqtt(m);
+
+print("principal.lua - mem alocada: "..Hardware.memoriaAloc());
