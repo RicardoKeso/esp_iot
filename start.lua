@@ -2,7 +2,7 @@ local Hardware = require "hardware";
 local ledLog = 4;
 
 Hardware.clock("high");
-Hardware.configWiFi("dlink-7238", "urrlg57003");
+Hardware.configWiFi("-", "-");
 Hardware.configGPIO(ledLog);
 Hardware.adcInit();
 
