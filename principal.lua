@@ -2,7 +2,7 @@ local Hardware = require "hardware";
 local Web = require "web";
 
 local ipAddr = wifi.sta.getip();
-local macTextPlan = Hardware.getMAC_textPlan();
+local macTextPlan = string.upper(wifi.sta.getmac()):gsub("%:", "");
 
 local espId = macTextPlan;
 
@@ -15,6 +15,8 @@ local tls = 0;
 local qos = 1;
 local retain = 1;
 local keepAlive = 60;
+local topicPub = "/status";
+local topicSub = "/action";
 
 local mqttP1 = espId.."/p01";
 local mqttP2 = espId.."/p02";
@@ -31,6 +33,7 @@ local localEsp = "sala"
 
 function Receiver(client, request)
     gpio.write(led_log, gpio.LOW);
+    collectgarbage()
     --
     local response = {};
     local _GET = {};
@@ -63,7 +66,7 @@ function Receiver(client, request)
             if ((_GET.func == "2") and (_GET.sta == macTextPlan)) then
                 if ((_GET.pino ~= nil) and (_GET.statusPino ~= nil)) then
                     Hardware.updatePino(_GET.pino, _GET.statusPino);
-                    m:publish(espId.."/p0".._GET.pino.."/status", _GET.statusPino, qos, retain);
+                    m:publish(espId.."/p0".._GET.pino..topicPub, _GET.statusPino, qos, retain);
                 end
                 response[2] = Web.menuStandAlone(Hardware.statusPinos(), _GET, macTextPlan);                    
                 response[1] = Web.status(Hardware, ipAddr, macTextPlan, localEsp);
@@ -88,26 +91,27 @@ srv:listen(portaLocalHTTP, function(conn) conn:on("receive", Receiver) end)
 -- ***************************************************************************************************************
 
 function StartMqtt(m)
+    collectgarbage()
 
     m:on("message", 
         function(client, topic, data)    
             gpio.write(led_log, gpio.LOW);  
             --
-            if (topic == mqttP1.."/action") then
+            if (topic == mqttP1..topicSub) then
                 gpio.write(1, ((data == "0") and gpio.LOW or gpio.HIGH));
-                client:publish(mqttP1.."/status", gpio.read(1), qos, retain);
-            elseif (topic == mqttP2.."/action") then
+                client:publish(mqttP1..topicPub, gpio.read(1), qos, retain);
+            elseif (topic == mqttP2..topicSub) then
                 gpio.write(2, ((data == "0") and gpio.LOW or gpio.HIGH));
-                client:publish(mqttP2.."/status", gpio.read(2), qos, retain);
-            elseif (topic == mqttP5.."/action") then
+                client:publish(mqttP2..topicPub, gpio.read(2), qos, retain);
+            elseif (topic == mqttP5..topicSub) then
                 gpio.write(5, ((data == "0") and gpio.LOW or gpio.HIGH));
-                client:publish(mqttP5.."/status", gpio.read(5), qos, retain);
-            elseif (topic == mqttP6.."/action") then
+                client:publish(mqttP5..topicPub, gpio.read(5), qos, retain);
+            elseif (topic == mqttP6..topicSub) then
                     gpio.write(6, ((data == "0") and gpio.LOW or gpio.HIGH));
-                    client:publish(mqttP6.."/status", gpio.read(6), qos, retain);
-            elseif (topic == mqttP7.."/action") then
+                    client:publish(mqttP6..topicPub, gpio.read(6), qos, retain);
+            elseif (topic == mqttP7..topicSub) then
                 gpio.write(7, ((data == "0") and gpio.LOW or gpio.HIGH));
-                client:publish(mqttP7.."/status", gpio.read(7), qos, retain);
+                client:publish(mqttP7..topicPub, gpio.read(7), qos, retain);
             end
             --        
             gpio.write(led_log, gpio.HIGH);
@@ -133,7 +137,15 @@ function StartMqtt(m)
             end,            
             function(client, motivo)
                 if (logFlag) then
-                    print(Web.ErrosMQTT(motivo, serverName))
+                    
+                    if (motivoId == -5) then
+                        print("server("..server..") nao encontrado.\n");
+                    elseif (motivoId == -2) then
+                        print("server("..server..") travado.\n");
+                    else        
+                        print("motivo falha: " .. motivoId);
+                    end
+
                     logflag = false
                     Hardware.BlinkLed(1, 250)
                 end
@@ -148,4 +160,6 @@ end
 
 StartMqtt(m);
 
-print("principal.lua - mem alocada: "..Hardware.memoriaAloc());
+-- ***************************************************************************************************************
+
+collectgarbage()
