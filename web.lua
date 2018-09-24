@@ -1,24 +1,5 @@
 local Web = {}
 
-function Web.get_cabecalho() -- retorna o cabecalho padrao 
-
-    -- ATENCAO - quanto maior o cabecalho, mais demorada sera a resposta
-    
-    local buf_;
-
-    buf_ = "HTTP/1.1 200 OK\r\n"; 
-    buf_ = buf_.."Access-Control-Allow-Origin:*\r\n";
-    buf_ = buf_.."Access-Control-Allow-Methods, GET\r\n";
-    buf_ = buf_.."Access-Control-Allow-Headers *AUTHORISED*\r\n";
-    buf_ = buf_.."Cache-Control: no-store, no-cache\r\n";
-    --buf_ = buf_.."Content-Encoding: gzip, deflate\r\n";
-    --buf_ = buf_.."Pragma: no-cache\r\n";
-    --buf_ = buf_.."Vary: Accept-Encoding\r\n";
-    buf_ = buf_.."Content-type: text/html;\r\n\r\n";
-
-    return buf_;
-end
-
 function Web.update_arquivo(server, porta, caminho, nomeArquivo) -- atualiza o init.lua 
     server = "http://"..server..":"..porta.."/"
     arquivo = nomeArquivo
@@ -97,14 +78,17 @@ function Web.menuStandAlone(stsPinos_, paramGET_, macTextPlan_)
 end
 
 function Web.status(hardware_, ipAddr_, macTextPlan_, hostname_)
+    local tensao = string.format("%1.03f", adc.readvdd33(0)/1000);
     local stsPinos_ = hardware_.statusPinos()
     local buf_;
+    local total_allocated, estimated_used = node.egc.meminfo();
     
     buf_ = "<pre>up time: "..hardware_.get_uptime();
     buf_ = buf_.."\nip: "..ipAddr_;
     buf_ = buf_.."\nmac: "..macTextPlan_;
-    buf_ = buf_.."\ntensao: "..hardware_.get_tensao().."V";
+    buf_ = buf_.."\ntensao: "..tensao.."V";
     buf_ = buf_.."\nlocal: "..hostname_;
+    buf_ = buf_.."\nmem alocada: "..string.format("%1.01f", (total_allocated/32000)*100).."%";
     buf_ = buf_.."\n";
     buf_ = buf_.."\npino 1: " .. (stsPinos_[0] and "on" or "off");
     buf_ = buf_.."\tpino 2: " .. (stsPinos_[1] and "on" or "off");
@@ -114,15 +98,5 @@ function Web.status(hardware_, ipAddr_, macTextPlan_, hostname_)
 
     return buf_
 end
-
-function Web.ErrosMQTT(motivoId, server)
-    if (motivoId == -5) then
-        return "server("..server..") nao encontrado.\n"
-    elseif (motivoId == -2) then
-        return "server("..server..") travado.\n"
-    else        
-        return "motivo falha: " .. motivoId
-    end
-end             
 
 return Web
