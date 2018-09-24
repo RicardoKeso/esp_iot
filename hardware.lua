@@ -1,25 +1,5 @@
 local Hardware = {}
 
-function Hardware.configGPIO()
-    -- DEFININDO MODO DE OPERACAO
-    gpio.mode(1, gpio.OUTPUT); --input
-    gpio.mode(2, gpio.OUTPUT); --input
-    gpio.mode(4, gpio.OUTPUT); -- led_log
-    gpio.mode(5, gpio.OUTPUT);
-    gpio.mode(6, gpio.OUTPUT);
-    gpio.mode(7, gpio.OUTPUT);
-    -- gpio.mode(pinBuzzer, gpio.OUTPUT);
-
-    -- DESLIGANDO AS GPIOs
-    gpio.write(1, gpio.LOW);
-    gpio.write(2, gpio.LOW);
-    gpio.write(4, gpio.HIGH); -- default 1 eh off
-    gpio.write(5, gpio.LOW);
-    gpio.write(6, gpio.LOW);
-    gpio.write(7, gpio.LOW);
-    -- gpio.write(pinBuzzer, gpio.LOW);
-end
-
 function Hardware.BlinkLed(id, tempo)
     tmr.alarm(id, tempo, 1, function ()
         status = ((status == gpio.LOW) and gpio.HIGH or gpio.LOW)
@@ -43,21 +23,6 @@ function Hardware.statusPinos() -- atualiza o status atual do pino
     return stsPinos
 end
 
-function Hardware.clock(freq)
-    if (freq == "low") then
-        print("\nCPU: "..node.setcpufreq(node.CPU80MHZ).."MHZ")
-    elseif (freq == "high") then
-        print("\nCPU: "..node.setcpufreq(node.CPU160MHZ).."MHZ")
-    end
-end
-    
-function Hardware.adcInit()
-    if adc.force_init_mode(adc.INIT_VDD33) then 
-      node.restart()
-      return
-    end
-end
-
 function Hardware.get_uptime() -- calcula o tempo online
     local segundos = tmr.time()%60;
     local minutos = (tmr.time()/60)%60;
@@ -75,32 +40,6 @@ function Hardware.get_uptime() -- calcula o tempo online
     return string.format("%s%02d:%02d:%02d", diasStr, horas, minutos, segundos);
 end
 
-function Hardware.get_tensao() -- formata o valor da tensao
-
-    return string.format("%1.03f", adc.readvdd33(0)/1000);  
-end
-
-function Hardware.configWiFi(ssid, pssid)
-    wifi.setmode(wifi.STATION);
-    wifi.setphymode(wifi.PHYMODE_G);
-    station_cfg={}
-    station_cfg.ssid=ssid;
-    station_cfg.pwd=pssid;
-    station_cfg.save=false;
-    station_cfg.auto=true;
-    wifi.sta.config(station_cfg);
-end
-
-function Hardware.getHostname()
-
-    return wifi.sta.gethostname()    
-end
-
-function Hardware.getMAC_textPlan()
-    local mac = string.upper(wifi.sta.getmac());
-    return mac:gsub("%:", "");
-end
-
 function Hardware.updatePino(pino_, statusPino_)
     local buf_;
     local status = tonumber(statusPino_);
@@ -114,15 +53,6 @@ function Hardware.updatePino(pino_, statusPino_)
     end
     
     return buf_;
-end
-
-function Hardware.memoriaAloc()
-    collectgarbage()
-    local total_allocated, estimated_used = node.egc.meminfo()
-    return string.format("%1.01f", (total_allocated/32000)*100).."%";
-
-    --print(node.egc.meminfo().." node")
-    --print((collectgarbage("count")*1024).." lua")
 end
 
 return Hardware
