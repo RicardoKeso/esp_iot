@@ -88,7 +88,7 @@ function Web.status(hardware_, ipAddr_, macTextPlan_, hostname_)
     buf_ = buf_.."\nmac: "..macTextPlan_;
     buf_ = buf_.."\ntensao: "..tensao.."V";
     buf_ = buf_.."\nlocal: "..hostname_;
-    buf_ = buf_.."\nmem alocada: "..string.format("%1.01f", (total_allocated/32000)*100).."%";
+    buf_ = buf_.."\nmem alocada: "..string.format("%1.01f", (total_allocated/32768)*100).."%"; --32KiB = 32768, 32KB = 32000
     buf_ = buf_.."\n";
     buf_ = buf_.."\npino 1: " .. (stsPinos_[0] and "on" or "off");
     buf_ = buf_.."\tpino 2: " .. (stsPinos_[1] and "on" or "off");
