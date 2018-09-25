@@ -135,13 +135,13 @@ function StartMqtt(m)
                 })
                 --function(conn) print("MQTT - subscribe") end)                
             end,            
-            function(client, motivo)
+            function(client, motivoId)
                 if (logFlag) then
                     
                     if (motivoId == -5) then
-                        print("server("..server..") nao encontrado.\n");
+                        print("server("..serverName..") nao encontrado.\n");
                     elseif (motivoId == -2) then
-                        print("server("..server..") travado.\n");
+                        print("server("..serverName..") travado.\n");
                     else        
                         print("motivo falha: " .. motivoId);
                     end
