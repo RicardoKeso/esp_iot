@@ -139,9 +139,9 @@ function StartMqtt(m)
                 if (logFlag) then
                     
                     if (motivoId == -5) then
-                        print("server("..serverName..") nao encontrado.\n");
+                        print("servico("..serverName..") nao encontrado.\n");
                     elseif (motivoId == -2) then
-                        print("server("..serverName..") travado.\n");
+                        print("servico("..serverName..") travado.\n");
                     else        
                         print("motivo falha: " .. motivoId);
                     end
